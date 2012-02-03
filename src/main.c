@@ -9,19 +9,20 @@
 static int fts_option = FTS_NOSTAT;
 static void find(char * path);
 static void consider_check(FTSENT * ent);
-static void check(char * path);
+static void check(FTSENT * ent);
 
 int main(int argc, char * argv[]) {
+  char * dir = argv[1];
   //parse options and build filter tree
-  init_test();
+  init_filter_tree(argc, argv);
   //walk the dir, excicute the filters and generate the result
   
-  char * dir = ".";
   find(dir);
   
   //show the result
   //free filter
   free_filter_tree();
+  free_reg();
 }
 
 static void find(char * path) {
@@ -52,11 +53,13 @@ static void consider_check(FTSENT * ent) {
   }
 
   if (!ignore) {
-    check(ent->fts_path);
+    check(ent);
   }
 
 }
 
-static void check(char * path) {
-  fprintf(stderr, "%d\n", exicute_filter_tree(path));
+static void check(FTSENT * ent) {
+  if (exicute_filter_tree(ent)) {
+    fprintf(stdout, "%s\n", ent->fts_path);
+  }
 }

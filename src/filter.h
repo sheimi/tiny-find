@@ -2,9 +2,10 @@
 #define FILTER_H
 
 #include "env.h"
-#include <sys/stat.h>
+#include <regex.h>
+#include <fts.h>
 
-typedef bool (*filter_cmd)(struct stat * status);
+typedef bool (*filter_cmd)();
 
 typedef struct filter {
   filter_cmd cmd;
@@ -12,9 +13,12 @@ typedef struct filter {
   struct filter * failed;
 } Filter;
 
-extern Filter * filter_tree;
-bool exicute_filter_tree(char * path);
-void init_test();
+
+bool exicute_filter_tree(FTSENT * ent);
+void init_filter_tree(int argc, char * argv[]);
 void free_filter_tree();
+void init_reg(char * pattern);
+void free_reg();
+void init_fnmatch(char * pattern); 
 
 #endif

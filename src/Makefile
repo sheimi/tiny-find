@@ -14,3 +14,4 @@ filter.o: filter.c
 
 clean:
 	rm -f *.o
+	rm -f $(TARGET)

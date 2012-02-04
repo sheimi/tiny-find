@@ -18,13 +18,13 @@ FTSENT * cur_ent;
 Filter * init_filter();
 void free_filter_node(Filter * node); 
 int exicute_filter(Filter * filter); 
-bool reg_filter();
-bool fnmatch_filter(); 
+bool reg_filter(Filter * filter);
+bool fnmatch_filter(Filter * filter); 
 
 
 int exicute_filter(Filter * filter) {
   //test whether this filter_tree is passed
-  bool filter_result = filter->cmd(&status);
+  bool filter_result = filter->cmd(filter);
   if (filter_result) {
     if (filter->passed == 0)
       return true;//if no passed return true
@@ -59,13 +59,11 @@ void init_filter_tree(int argc, char * argv[]) {
     switch(opt) {
       case 'f':
         fprintf(stderr, "filename is %s\n", optarg);
-        init_fnmatch(optarg);
-        current_filter->cmd = fnmatch_filter;
+        init_fnmatch(current_filter, optarg);
         break;
       case 'r':
         fprintf(stderr, "regex is %s\n", optarg);
-        current_filter->cmd = reg_filter; 
-        init_reg(optarg);
+        init_reg(current_filter, optarg);
         break;
       case ':':
         fprintf(stderr, "option need a value");
@@ -85,7 +83,17 @@ Filter * init_filter() {
   f->passed = NULL;
   f->failed = NULL;
   f->cmd = NULL;
+  f->info = NULL;
   return f;
+}
+
+void _free_filter(Filter * filter) {
+  switch(filter->ft) {
+    case REG_FILTER:
+      free_reg(filter);
+      break;
+  }
+  free(filter);
 }
 
 void free_filter_node(Filter * node) {
@@ -93,11 +101,11 @@ void free_filter_node(Filter * node) {
     return;
   if (node->passed) {
     free_filter_node(node->passed);
-    free(node->passed);
+    _free_filter(node->passed);
   }
   if (node->failed) {
     free_filter_node(node->failed);
-    free(node->failed);
+    _free_filter(node->failed);
   }
 }
 
@@ -109,28 +117,25 @@ void free_filter_tree() {
 /**
  * regex filter
  */
-
-static regex_t reg;
-static bool reg_inited = false; 
-
-void init_reg(char * pattern) {
+void init_reg(Filter * filter, char * pattern) {
   int cflags = 0;
-  regcomp(&reg, pattern, cflags);
-  reg_inited = true;
+  filter->ft = REG_FILTER;
+  filter->cmd = reg_filter;
+  filter->info = malloc(sizeof(regex_t));
+  regcomp(filter->info, pattern, cflags);
 }
 
-void free_reg() {
-  if (reg_inited)
-    regfree(&reg);
+void free_reg(Filter * filter) {
+  regfree(filter->info);
 }
 
-bool reg_filter() {
+bool reg_filter(Filter * filter) {
   char * filename = cur_ent->fts_name;
   char ebuf[128];
   const size_t nmatch = 1;
   regmatch_t pm[1];
   int r;
-  r = regexec(&reg, filename, nmatch, pm, 0); 
+  r = regexec(filter->info, filename, nmatch, pm, 0); 
   if (r == REG_NOMATCH)
     return false; 
   return true;
@@ -139,16 +144,17 @@ bool reg_filter() {
 /**
  * fnmatch
  */
-static char * fnmatch_pattern; 
 
-void init_fnmatch(char * pattern) {
-  fnmatch_pattern = pattern;
+void init_fnmatch(Filter * filter, char * pattern) {
+  filter->info = pattern;
+  filter->ft = FNMATCH_FILTER;
+  filter->cmd = fnmatch_filter;
 }
 
-bool fnmatch_filter() {
+bool fnmatch_filter(Filter * filter) {
   char * filename = cur_ent->fts_name;
   int ret;
-  ret = fnmatch(fnmatch_pattern, filename, FNM_PATHNAME|FNM_PERIOD);
+  ret = fnmatch(filter->info, filename, FNM_PATHNAME|FNM_PERIOD);
   if (ret == FNM_NOMATCH)
     return false;
   return true;

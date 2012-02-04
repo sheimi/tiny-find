@@ -22,7 +22,6 @@ int main(int argc, char * argv[]) {
   //show the result
   //free filter
   free_filter_tree();
-  free_reg();
 }
 
 static void find(char * path) {

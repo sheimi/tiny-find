@@ -58,7 +58,7 @@ static void consider_check(FTSENT * ent) {
 }
 
 static void check(FTSENT * ent) {
-  if (exicute_filter_tree(ent)) {
+  if (execute_filter_tree(ent)) {
     fprintf(stdout, "%s\n", ent->fts_path);
   }
 }

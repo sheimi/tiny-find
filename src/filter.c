@@ -20,7 +20,7 @@ enum time_type {ATIME, AMIN, CTIME, CMIN};
 
 Filter * init_filter();
 void free_filter_node(Filter * node); 
-int exicute_filter(Filter * filter); 
+int execute_filter(Filter * filter); 
 //filters
 void init_reg(Filter * filter, char * pattern);
 bool reg_filter(Filter * filter);
@@ -35,25 +35,25 @@ void init_not_filter_adapter(Filter * filter);
 bool not_filter_adapter(Filter * filter);
 void set_not_adapter_info (Filter * filter, Filter * inner_filter); 
 
-int exicute_filter(Filter * filter) {
+int execute_filter(Filter * filter) {
   //test whether this filter_tree is passed
   bool filter_result = filter->cmd(filter);
   if (filter_result) {
     if (filter->passed == 0)
       return true;//if no passed return true
-    bool exicute_result = exicute_filter(filter->passed);
-    if (exicute_result) 
+    bool execute_result = execute_filter(filter->passed);
+    if (execute_result) 
       return true;
   }
   if (filter->failed == 0)
     return false;
-  return exicute_filter(filter->failed);
+  return execute_filter(filter->failed);
 }
 
-bool exicute_filter_tree(FTSENT * ent) {
+bool execute_filter_tree(FTSENT * ent) {
   stat(ent->fts_path, &status); 
   cur_ent = ent;
-  bool passed = exicute_filter(filter_tree.passed);
+  bool passed = execute_filter(filter_tree.passed);
   return passed;
 }
 
@@ -179,7 +179,7 @@ void set_not_adapter_info (Filter * filter, Filter * inner_filter) {
 
 bool not_filter_adapter(Filter * filter) {
   Filter * inner_filter = (Filter *) filter->info;
-  return !inner_filter->cmd(inner_filter);
+  return !execute_filter(inner_filter);
 }
 
 

@@ -26,7 +26,7 @@ typedef struct filter {
 } Filter;
 
 
-bool exicute_filter_tree(FTSENT * ent);
+bool execute_filter_tree(FTSENT * ent);
 void init_filter_tree(int argc, char * argv[]);
 void free_filter_tree();
 

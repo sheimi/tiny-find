@@ -14,11 +14,6 @@ static void check(FTSENT * ent);
 int main(int argc, char * argv[]) {
   char * dir = argv[1];
 
-  init_parser(argc, argv);
-
-  free_parser();  
-
-  return 0;
   //parse options and build filter tree
   init_filter_tree(argc, argv);
   //walk the dir, excicute the filters and generate the result

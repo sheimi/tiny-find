@@ -1,4 +1,6 @@
 #include "filter.h"
+#include "parser.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -8,7 +10,6 @@
 #include <fts.h>
 #include <fnmatch.h>
 #include <unistd.h>
-#include <getopt.h>
 #include <time.h>
 
 static Filter filter_tree;
@@ -58,59 +59,44 @@ bool execute_filter_tree(FTSENT * ent) {
 }
 
 void init_filter_tree(int argc, char * argv[]) {
-  int opt;
+  char * exp;
   int not_enable = -1;
   Filter * now = &filter_tree;
-
-  struct option longopts[] = {
-    {"not", 0, NULL, 'n'}, 
-    {"name", 1, NULL, 'a'},
-    {"regex", 1, NULL, 'r'},
-    {"amin", 1, NULL, 'm'},
-    {"atime", 1, NULL, 't'},
-    {"cmin", 1, NULL, 'i'},
-    {"ctime", 1, NULL, 'e'},
-  };
-
-  while((opt = getopt_long(argc, argv, "na:r:m:t:", 
-                           longopts, NULL)) != -1) {
+  init_parser(argc, argv);
+  
+  while((exp = get_exp()) != NULL) {
     Filter * current_filter = init_filter();
-    switch(opt) {
-      case 'n':
-        fprintf(stderr, "filter not adapter\n");
-        not_enable = 2;
-        init_not_filter_adapter(current_filter);
-        break;
-      case 'a':
-        fprintf(stderr, "filename is %s\n", optarg);
-        init_fnmatch(current_filter, optarg);
-        break;
-      case 'r':
-        fprintf(stderr, "regex is %s\n", optarg);
-        init_reg(current_filter, optarg);
-        break;
-      case 'm':
-        fprintf(stderr, "min deltais %s\n", optarg);
-        init_time(current_filter, AMIN, optarg);
-        break;
-      case 't':
-        fprintf(stderr, "day delta is %s\n", optarg);
-        init_time(current_filter, ATIME, optarg);
-        break;
-      case 'i':
-        fprintf(stderr, "min deltais %s\n", optarg);
-        init_time(current_filter, CMIN, optarg);
-        break;
-      case 'e':
-        fprintf(stderr, "day delta is %s\n", optarg);
-        init_time(current_filter, CTIME, optarg);
-        break;
-      case ':':
-        fprintf(stderr, "option need a value");
-        break;
-      case '?':
-        fprintf(stderr, "unknown option");
-        break;
+    char * optarg;
+    if (IS_EQUAL(exp, "-name")) {
+      optarg = get_exp();
+      fprintf(stderr, "filename is %s\n", optarg);
+      init_fnmatch(current_filter, optarg);
+    } else if (IS_EQUAL(exp, "-regex")) {
+      optarg = get_exp();
+      fprintf(stderr, "regex is %s\n", optarg);
+      init_reg(current_filter, optarg);
+    } else if (IS_EQUAL(exp, "-amin")) {
+      optarg = get_exp();
+      fprintf(stderr, "min deltais %s\n", optarg);
+      init_time(current_filter, AMIN, optarg);
+    } else if (IS_EQUAL(exp, "-atime")) {
+      optarg = get_exp();
+      fprintf(stderr, "day delta is %s\n", optarg);
+      init_time(current_filter, ATIME, optarg);
+    } else if (IS_EQUAL(exp, "-cmin")) {
+      optarg = get_exp();
+      fprintf(stderr, "min deltais %s\n", optarg);
+      init_time(current_filter, CMIN, optarg);
+    } else if (IS_EQUAL(exp, "-ctime")) {
+      optarg = get_exp();
+      fprintf(stderr, "day delta is %s\n", optarg);
+      init_time(current_filter, CTIME, optarg);
+    } else if (IS_EQUAL(exp, "-not")) {
+      fprintf(stderr, "filter not adapter\n");
+      not_enable = 2;
+      init_not_filter_adapter(current_filter);
+    } else {
+      //TODO
     }
     not_enable--;
     if (not_enable == 0) {
@@ -121,6 +107,7 @@ void init_filter_tree(int argc, char * argv[]) {
       now = now->passed;
     }
   }
+  free_parser();
 }
 
 /**

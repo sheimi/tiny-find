@@ -56,6 +56,9 @@ char * pop_stack() {
 }
 
 char * top_stack() {
+  if (stack_index == 0) {
+    return "";
+  }
   return help_stack[stack_index - 1];
 }
 
@@ -74,6 +77,13 @@ void set_post_exp(int argc, char * argv[]) {
         push_back_exp(pop_stack());
       }
       pop_stack();
+      if (IS_EQUAL(top_stack(), "-not")) {
+        char * tmp = post_exp[post_exp_index - 1];
+        if (IS_NOT_EQUAL(tmp, "-and") && IS_NOT_EQUAL(tmp, "-or")) {
+          push_back_exp("-and");
+        }
+        push_back_exp(pop_stack());
+      }
     } else if (IS_EQUAL(exp, "-and")) {
       if (!stack_empty() && IS_EQUAL(top_stack(), "-and")) {
         push_back_exp(exp);
@@ -86,9 +96,12 @@ void set_post_exp(int argc, char * argv[]) {
       }
       push_stack(exp);
     } else if (IS_EQUAL(exp, "-not")) {
-      push_back_exp(exp);
+      push_stack(exp);
     } else {
       push_back_exp(exp); 
+      if (IS_EQUAL(top_stack(), "-not") && ((i == argc - 1) || argv[i + 1][0] == '-')) {
+        push_back_exp(pop_stack());
+      }
     }
   }
 

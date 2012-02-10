@@ -22,6 +22,7 @@ typedef struct filter {
   filter_cmd cmd;
   struct filter * passed;
   struct filter * failed;
+  bool visited;
   void * info;            //some necessary information
 } Filter;
 

@@ -21,8 +21,19 @@ static Filter ** filter_list;
 static int filter_list_size;
 static int filter_list_len;
 
-enum time_type {ATIME, AMIN, CTIME, CMIN};
+/* *
+ *  for time filter
+ * */
+enum time_type {ATIME, AMIN, CTIME, CMIN, ANEWER, CNEWER};
 
+struct time_info {
+  enum time_type tt;
+  void * value; 
+};
+
+/**
+ * DECLARATION OF FUNCTIONS
+ **/
 Filter * init_filter();
 int execute_filter(Filter * filter); 
 void init_visit_filter();
@@ -32,19 +43,23 @@ void filter_and();
 void filter_or(); 
 void filter_not();
 
+void init_not_filter_adapter(Filter * filter);
+bool not_filter_adapter(Filter * filter);
+void set_not_adapter_info (Filter * filter, Filter * inner_filter); 
+
 //filters
 void init_reg(char * pattern);
 bool reg_filter(Filter * filter);
 
-void init_fnmatch(char * pattern); 
+void init_fnmatch(char * pattern, bool case_s); 
 bool fnmatch_filter(Filter * filter); 
 
 void init_time(enum time_type tt, char * pattern);
 bool time_filter(Filter * filter);
 
-void init_not_filter_adapter(Filter * filter);
-bool not_filter_adapter(Filter * filter);
-void set_not_adapter_info (Filter * filter, Filter * inner_filter); 
+void init_filetype(char ft);
+bool filetype_filter(Filter * filter);
+
 
 
 void init_visit_filter() {
@@ -158,7 +173,11 @@ void init_filter_tree(int argc, char * argv[]) {
     if (IS_EQUAL(exp, "-name")) {
       optarg = get_exp();
       fprintf(stderr, "filename is %s\n", optarg);
-      init_fnmatch(optarg);
+      init_fnmatch(optarg, true);
+    } else if (IS_EQUAL(exp, "-iname")) {
+      optarg = get_exp();
+      fprintf(stderr, "filename is %s\n", optarg);
+      init_fnmatch(optarg, false);
     } else if (IS_EQUAL(exp, "-regex")) {
       optarg = get_exp();
       fprintf(stderr, "regex is %s\n", optarg);
@@ -171,6 +190,14 @@ void init_filter_tree(int argc, char * argv[]) {
       optarg = get_exp();
       fprintf(stderr, "day delta is %s\n", optarg);
       init_time(ATIME, optarg);
+    } else if (IS_EQUAL(exp, "-anewer")) {
+      optarg = get_exp();
+      fprintf(stderr, "test file is %s\n", optarg);
+      init_time(ANEWER, optarg);
+    } else if (IS_EQUAL(exp, "-cnewer")) {
+      optarg = get_exp();
+      fprintf(stderr, "test fiel is %s\n", optarg);
+      init_time(CNEWER, optarg);
     } else if (IS_EQUAL(exp, "-cmin")) {
       optarg = get_exp();
       fprintf(stderr, "min deltais %s\n", optarg);
@@ -179,6 +206,10 @@ void init_filter_tree(int argc, char * argv[]) {
       optarg = get_exp();
       fprintf(stderr, "day delta is %s\n", optarg);
       init_time(CTIME, optarg);
+    } else if (IS_EQUAL(exp, "-type")) {
+      optarg = get_exp();
+      fprintf(stderr, "file type is %s\n", optarg);
+      init_filetype(optarg[0]);
     } else if (IS_EQUAL(exp, "-not")) {
       fprintf(stderr, "filter not adapter\n");
       filter_not();
@@ -214,11 +245,17 @@ Filter * init_filter() {
 
 void _free_filter(Filter * filter) {
   switch(filter->ft) {
+    case FNMATCH_FILTER:
+      free(filter->info);
+      break;
     case REG_FILTER:
       regfree(filter->info);
       free(filter->info);
       break;
     case TIME_FILTER:
+      if (((struct time_info *)(filter->info))->tt == ANEWER 
+          || ((struct time_info *)(filter->info))->tt == CNEWER)
+        free(((struct time_info *)(filter->info))->value);
       free(filter->info);
       break;
   }
@@ -277,18 +314,32 @@ bool reg_filter(Filter * filter) {
  * fnmatch
  */
 
-void init_fnmatch(char * pattern) {
+struct fn_option {
+  bool case_s;
+  char * pattern;
+};
+
+void init_fnmatch(char * pattern, bool case_s) {
   Filter * filter = init_filter();  
-  filter->info = pattern;
+  struct fn_option * fo = (struct fn_option *)malloc(sizeof(struct fn_option));
+  fo->case_s = case_s;
+  fo->pattern = pattern;
+  filter->info = fo;
   filter->ft = FNMATCH_FILTER;
   filter->cmd = fnmatch_filter;
   push_op_stack(filter);
 }
 
 bool fnmatch_filter(Filter * filter) {
+  struct fn_option * fno = (struct fn_option *)filter->info;
   char * filename = cur_ent->fts_name;
   int ret;
-  ret = fnmatch(filter->info, filename, FNM_PATHNAME|FNM_PERIOD);
+  if (fno->case_s) {
+    ret = fnmatch(fno->pattern, filename, FNM_PATHNAME|FNM_PERIOD);
+  } else {
+    ret = fnmatch(fno->pattern, filename, 
+          FNM_PATHNAME|FNM_PERIOD|FNM_CASEFOLD);
+  }
   if (ret == FNM_NOMATCH)
     return false;
   return true;
@@ -298,16 +349,23 @@ bool fnmatch_filter(Filter * filter) {
  * time filter
  * */
 
-struct time_info {
-  enum time_type tt;
-  char * value; 
-};
-
 void init_time(enum time_type tt, char * pattern) {
   Filter * filter = init_filter();  
   struct time_info * ti = malloc(sizeof(struct time_info));
+  struct stat buf;
   ti->tt = tt;
-  ti->value = pattern;
+  if (tt == ANEWER || tt == CNEWER) {
+    stat(pattern, &buf);
+    time_t * time = (time_t)malloc(sizeof(time_t)); 
+    if (tt == ANEWER) {
+      *time = buf.st_atime;
+    } else {
+      *time = buf.st_ctime;
+    }
+    ti->value = time;
+  } else { 
+    ti->value = pattern;
+  }
   filter->info = ti;
   filter->ft = TIME_FILTER;
   filter->cmd = time_filter;
@@ -317,15 +375,20 @@ void init_time(enum time_type tt, char * pattern) {
 bool time_filter(Filter * filter) {
   struct time_info * ti = filter->info;
   enum time_type tt = ti->tt;
-  int t_del = atoi(ti->value);
+  int t_del;
 
   struct stat buf;
   time_t cur_time;
   double diff;
 
   bool result = false;
-
-  cur_time = time(NULL);
+  
+  if (tt == ANEWER || tt == CNEWER) {
+    cur_time = *(time_t *)ti->value;
+  } else {
+    t_del= atoi(ti->value);
+    cur_time = time(NULL);
+  }
   stat(cur_ent->fts_path, &buf);
   switch(tt) {
     case ATIME:
@@ -344,8 +407,49 @@ bool time_filter(Filter * filter) {
       diff = difftime(cur_time, buf.st_ctime);
       result = diff < t_del * 60;
       break;
+    case ANEWER:
+      diff = difftime(buf.st_atime, cur_time);
+      result = diff > 0;
+      break;
+    case CNEWER:
+      diff = difftime(buf.st_ctime, cur_time);
+      result = diff > 0;
+      break;
   }
   return result;
 }
 
 
+void init_filetype(char ft) {
+  Filter * filter = init_filter();
+  filter->ft = FILETYPE_FILTER;
+  filter->cmd = filetype_filter;
+  filter->info = ft;
+  push_op_stack(filter);
+}
+
+bool filetype_filter(Filter * filter) {
+  struct stat buf;
+  stat(cur_ent->fts_path, &buf);
+  char ft = (char)filter->info;
+  switch(ft) {
+    case 'd':
+      return S_ISDIR(buf.st_mode); 
+    case 'c':
+      return S_ISCHR(buf.st_mode); 
+    case 'b':
+      return S_ISBLK(buf.st_mode); 
+    case 'p':
+      return S_ISFIFO(buf.st_mode); 
+    case 'f':
+      return S_ISREG(buf.st_mode); 
+    case 'l':
+      return S_ISLNK(buf.st_mode); 
+    case 's':
+      //TODO to set is a socket
+      break;
+    default:
+      break;
+  }
+  return false;
+}

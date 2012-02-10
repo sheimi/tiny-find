@@ -14,7 +14,8 @@ enum FilterType {
   FNMATCH_FILTER, 
   REG_FILTER, 
   AMIN_FILTER, 
-  TIME_FILTER
+  TIME_FILTER,
+  FILETYPE_FILTER
 };
 
 typedef struct filter {

@@ -5,23 +5,29 @@
 
 #include "parser.h"
 
-<<<<<<< HEAD
-static char ** post_exp;
-static int post_exp_index;
+char * ALL_EXP[] = {
+  "-name",
+  "-iname",
+  "-user",
+  "-group",
+  "-perm",
+  "-regex",
+  "-amin",
+  "-atime",
+  "-anewer",
+  "-cmin",
+  "-ctime",
+  "-cnewer",
+  "-mmin",
+  "-mtime",
+  "-mnewer",
+  "-type",
+  "-size",
+};
 
-static char ** help_stack;
-static int stack_index;
+int ALL_EXP_LEN = 17;
 
-void init_parser(int argc, char * argv[]);
-void free_parser();
-char * pop_stack();
-char * top_stack();
-void push_stack(char * exp);
-bool stack_empty();
-void push_back_exp(char * exp);
-void set_post_exp(int argc, char * argv[]);
-char * get_exp();
-=======
+
 static char ** post_exp;      // the postfix expression list
 static int post_exp_index;    // the list size
 
@@ -34,7 +40,6 @@ void push_stack(char * exp);  // push expression to stack
 bool stack_empty();           // whether the stack is empty
 void push_back_exp(char * exp);             //push exp to post_exp
 void set_post_exp(int argc, char * argv[]); //build post_exp
->>>>>>> b1
 
 char * get_exp() {
   static int i = -1;
@@ -45,11 +50,15 @@ char * get_exp() {
   return post_exp[i];
 }
 
-<<<<<<< HEAD
+bool is_exp(char * arg) {
+  int i;
+  for (i = 0; i < ALL_EXP_LEN; i++) {
+    if (IS_EQUAL(arg, ALL_EXP[i]))
+      return true;
+  } 
+  return false;
+}
 
-
-=======
->>>>>>> b1
 void init_parser(int argc, char * argv[]) {
   post_exp = (char **)(malloc(sizeof(char **) * argc));
   help_stack = (char **)(malloc(sizeof(char **) * argc));
@@ -74,12 +83,9 @@ char * pop_stack() {
 }
 
 char * top_stack() {
-<<<<<<< HEAD
-=======
   if (stack_index == 0) {
     return "";
   }
->>>>>>> b1
   return help_stack[stack_index - 1];
 }
 
@@ -89,6 +95,8 @@ bool stack_empty() {
 
 void set_post_exp(int argc, char * argv[]) {
   int i;
+  bool flag_c1 = false;
+  bool flag_c2 = false;
   for (i = 2; i < argc; i++) {
     char * exp = argv[i];
     if (IS_EQUAL(exp, "(")) {
@@ -97,9 +105,6 @@ void set_post_exp(int argc, char * argv[]) {
       while (!stack_empty() && IS_NOT_EQUAL(top_stack(), "(")) {
         push_back_exp(pop_stack());
       }
-<<<<<<< HEAD
-      pop_stack();
-=======
       pop_stack(); //pop item until there is '('
       if (IS_EQUAL(top_stack(), "-not")) {
         char * tmp = post_exp[post_exp_index - 1];
@@ -108,31 +113,36 @@ void set_post_exp(int argc, char * argv[]) {
         }
         push_back_exp(pop_stack());
       } //test whether there is -not
->>>>>>> b1
     } else if (IS_EQUAL(exp, "-and")) {
       if (!stack_empty() && IS_EQUAL(top_stack(), "-and")) {
         push_back_exp(exp);
       } else {
         push_stack(exp);
       }
+      flag_c1 = false;
     } else if (IS_EQUAL(exp, "-or")) {
       while (!stack_empty() && IS_NOT_EQUAL(top_stack(), "(")) {
         push_back_exp(pop_stack());
       }
       push_stack(exp);
+      flag_c1 = false;
     } else if (IS_EQUAL(exp, "-not")) {
-<<<<<<< HEAD
-      push_back_exp(exp);
-    } else {
-      push_back_exp(exp); 
-=======
       push_stack(exp);
+    } else if (is_exp(exp)) {
+      push_back_exp(exp); 
+      if (flag_c1) {
+        flag_c2 = true;
+      }
+      flag_c1 = true;
     } else {
       push_back_exp(exp); 
-      if (IS_EQUAL(top_stack(), "-not") && ((i == argc - 1) || argv[i + 1][0] == '-')) {
+      if (IS_EQUAL(top_stack(), "-not")) {
         push_back_exp(pop_stack());
       }
->>>>>>> b1
+      if (flag_c2) {
+        push_back_exp("-and");
+        flag_c2 = false;
+      }
     }
   }
 

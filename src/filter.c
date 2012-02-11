@@ -640,5 +640,6 @@ bool perm_filter(Filter * filter) {
   strcpy(tmp + 1, filter->info);
   ul = strtoul (tmp,NULL,0);
   stat(cur_ent->fts_path, &buf);
+  free(tmp);
   return PERM_EQUAL(buf.st_mode, ul);
 }

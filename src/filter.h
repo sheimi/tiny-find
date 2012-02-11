@@ -15,7 +15,8 @@ enum FilterType {
   REG_FILTER, 
   AMIN_FILTER, 
   TIME_FILTER,
-  FILETYPE_FILTER
+  FILETYPE_FILTER,
+  FILESIZE_FILTER
 };
 
 typedef struct filter {

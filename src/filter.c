@@ -11,6 +11,8 @@
 #include <fnmatch.h>
 #include <unistd.h>
 #include <time.h>
+#include <string.h>
+#include <math.h>
 
 static Filter filter_tree;
 
@@ -60,7 +62,8 @@ bool time_filter(Filter * filter);
 void init_filetype(char ft);
 bool filetype_filter(Filter * filter);
 
-
+void init_filesize(char * size);
+bool filesize_filter(Filter * filter);
 
 void init_visit_filter() {
   int i;
@@ -210,6 +213,10 @@ void init_filter_tree(int argc, char * argv[]) {
       optarg = get_exp();
       fprintf(stderr, "file type is %s\n", optarg);
       init_filetype(optarg[0]);
+    } else if (IS_EQUAL(exp, "-size")) {
+      optarg = get_exp();
+      fprintf(stderr, "file size is %s\n", optarg);
+      init_filesize(optarg);
     } else if (IS_EQUAL(exp, "-not")) {
       fprintf(stderr, "filter not adapter\n");
       filter_not();
@@ -452,4 +459,54 @@ bool filetype_filter(Filter * filter) {
       break;
   }
   return false;
+}
+void init_filesize(char * size) {
+  Filter * filter = init_filter();
+  filter->ft = FILESIZE_FILTER;
+  filter->cmd = filesize_filter;
+  filter->info = size;
+  push_op_stack(filter);
+}
+
+bool filesize_filter(Filter * filter) {
+  char * str = (char *) (malloc(sizeof(char) * (strlen(filter->info) + 1)));
+  char st = 0;
+  strcpy(str, filter->info);
+  struct stat buf;
+  stat(cur_ent->fts_path, &buf);
+  bool result = false; 
+
+  int bn = buf.st_blocks;
+  int bs = buf.st_blksize;
+  long all_size = buf.st_size;
+  long e_size;
+  if (str[strlen(str)-1] > 58) {
+    st = str[strlen(str) - 1];
+    str[strlen(str) - 1] = '\0';
+  }
+  e_size = atoi(str);
+
+  switch(st) {
+    case 'P':
+      e_size *= 1024;
+    case 'T':
+      e_size *= 1024;
+    case 'G':
+      e_size *= 1024;
+    case 'M':
+      e_size *= 1024;
+    case 'k':
+      e_size *= 1024;
+      result = all_size == e_size;
+      break;
+    case 'c':
+      result = all_size == e_size;
+      break;
+    default:
+      all_size = ceil(all_size * 1.0 / 512);
+      result = all_size == e_size; 
+      break;
+  }
+  free(str);
+  return result;
 }

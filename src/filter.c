@@ -13,6 +13,8 @@
 #include <time.h>
 #include <string.h>
 #include <math.h>
+#include <pwd.h>
+#include <grp.h>
 
 static Filter filter_tree;
 
@@ -64,6 +66,15 @@ bool filetype_filter(Filter * filter);
 
 void init_filesize(char * size);
 bool filesize_filter(Filter * filter);
+
+void init_user(char * name);
+bool user_filter(Filter * filter);
+
+void init_group(char * name);
+bool group_filter(Filter * filter);
+
+void init_perm(char * name);
+bool perm_filter(Filter * filter);
 
 void init_visit_filter() {
   int i;
@@ -181,6 +192,18 @@ void init_filter_tree(int argc, char * argv[]) {
       optarg = get_exp();
       fprintf(stderr, "filename is %s\n", optarg);
       init_fnmatch(optarg, false);
+    } else if (IS_EQUAL(exp, "-user")) {
+      optarg = get_exp();
+      fprintf(stderr, "user is %s\n", optarg);
+      init_user(optarg);
+    } else if (IS_EQUAL(exp, "-group")) {
+      optarg = get_exp();
+      fprintf(stderr, "group is %s\n", optarg);
+      init_group(optarg);
+    } else if (IS_EQUAL(exp, "-perm")) {
+      optarg = get_exp();
+      fprintf(stderr, "perm is %s\n", optarg);
+      init_perm(optarg);
     } else if (IS_EQUAL(exp, "-regex")) {
       optarg = get_exp();
       fprintf(stderr, "regex is %s\n", optarg);
@@ -536,4 +559,86 @@ bool filesize_filter(Filter * filter) {
   }
   free(str);
   return result;
+}
+
+bool is_int(char * item) {
+  int i;
+  for (i = 0; i < strlen(item); i++) {
+    if (item[i] >= 58 || item[i] < 48)
+      return false;
+  }
+  return true;
+}
+
+void init_user(char * name) {
+  Filter * filter = init_filter();
+  filter->ft = USER_FILTER;
+  filter->cmd = user_filter;
+  filter->info = name;
+  push_op_stack(filter);
+}
+
+bool user_filter(Filter * filter) {
+  char * info = (char *) filter->info;
+  struct passwd * pwd = NULL;
+  int user_id;
+  struct stat buf;
+  if (is_int(info)) {
+    user_id = atoi(info);
+  } else {
+    pwd = getpwnam(info);
+    if (pwd == NULL) {
+      return false;
+    }
+    user_id = pwd->pw_uid;
+  }
+  stat(cur_ent->fts_path, &buf);
+  return user_id == buf.st_uid;
+}
+
+void init_group(char * name) {
+  Filter * filter = init_filter();
+  filter->ft = GROUP_FILTER;
+  filter->cmd = group_filter;
+  filter->info = name;
+  push_op_stack(filter);
+}
+
+bool group_filter(Filter * filter) {
+  char * info = (char *) filter->info;
+  struct group * grp = NULL;
+  int group_id;
+  struct stat buf;
+  if (is_int(info)) {
+    grp = atoi(info);
+  } else {
+    grp = getgrnam(info);
+    if (grp == NULL) {
+      return false;
+    }
+    group_id = grp->gr_gid;
+  }
+  stat(cur_ent->fts_path, &buf);
+  return group_id == buf.st_gid;
+}
+
+void init_perm(char * name) {
+  Filter * filter = init_filter();
+  filter->ft = PERM_FILTER;
+  filter->cmd = perm_filter;
+  filter->info = name;
+  push_op_stack(filter);
+}
+
+#define PERM_EQUAL(m, n) ((m & PERM_MASK) == n)
+
+bool perm_filter(Filter * filter) {
+  unsigned long ul;
+  struct stat buf;
+  char * tmp = (char *) malloc(sizeof(char) * (strlen(filter->info) + 2));
+  tmp[0] = '0';
+  strcpy(tmp + 1, filter->info);
+  ul = strtoul (tmp,NULL,0);
+  stat(cur_ent->fts_path, &buf);
+  return PERM_EQUAL(buf.st_mode, ul);
 }

@@ -5,6 +5,8 @@
 #include <regex.h>
 #include <fts.h>
 
+#define PERM_MASK 0000777
+
 struct filter;
 
 typedef bool (*filter_cmd)(struct filter * f);
@@ -16,7 +18,10 @@ enum FilterType {
   AMIN_FILTER, 
   TIME_FILTER,
   FILETYPE_FILTER,
-  FILESIZE_FILTER
+  FILESIZE_FILTER,
+  USER_FILTER,
+  GROUP_FILTER,
+  PERM_FILTER
 };
 
 typedef struct filter {

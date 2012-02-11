@@ -503,8 +503,7 @@ bool filetype_filter(Filter * filter) {
     case 'l':
       return S_ISLNK(buf.st_mode); 
     case 's':
-      //TODO to set is a socket
-      break;
+      return S_ISSOCK(buf.st_mode);
     default:
       break;
   }

@@ -4,7 +4,9 @@
 #include <sys/stat.h>
 #include <fts.h>
 
-#include "find.h"
+#include "env.h"
+#include "filter.h"
+#include "parser.h"
 
 static int fts_option = FTS_NOSTAT;
 static void find(char * path);

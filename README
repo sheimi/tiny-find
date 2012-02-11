@@ -131,10 +131,7 @@ b. Build the Filter Tree
      filter_and  | connect to filter tree with and operation
      filter_or   | connect to filter tree with or operation
      filter_not  | wrap a filter in a not filter adapter
-   There are a stack which has two members.
-     filter_and and filter_or will pop the two element and push the result
-     filter_not will pop a filter and push the result
-     if stack is full, execute filter_and
+   There are a stack to compute logic operations.
 
 c. RELEASE the Filter Tree
    There is a list to track all the filters.

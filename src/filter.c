@@ -16,10 +16,10 @@
 #include <pwd.h>
 #include <grp.h>
 
-static Filter filter_tree;
+static Filter filter_tree;        // whether the filter is filter
 
-struct stat status;
-FTSENT * cur_ent;
+struct stat status;               // the file status of current file
+FTSENT * cur_ent;                 // the FTSENT of current file
 
 static Filter ** filter_list;
 static int filter_list_size;
@@ -422,7 +422,6 @@ bool time_filter(Filter * filter) {
   enum time_type tt = ti->tt;
   int t_del;
 
-  struct stat buf;
   time_t cur_time;
   double diff;
 
@@ -434,42 +433,41 @@ bool time_filter(Filter * filter) {
     t_del= atoi(ti->value);
     cur_time = time(NULL);
   }
-  stat(cur_ent->fts_path, &buf);
   switch(tt) {
     case ATIME:
-      diff = difftime(cur_time, buf.st_atime);
+      diff = difftime(cur_time, status.st_atime);
       result = diff < t_del * 60 * 60 * 24;
       break;
     case AMIN:
-      diff = difftime(cur_time, buf.st_atime);
+      diff = difftime(cur_time, status.st_atime);
       result = diff < t_del * 60;
       break;
     case CTIME:
-      diff = difftime(cur_time, buf.st_ctime);
+      diff = difftime(cur_time, status.st_ctime);
       result = diff < t_del * 60 * 60 * 24;
       break;
     case CMIN:
-      diff = difftime(cur_time, buf.st_ctime);
+      diff = difftime(cur_time, status.st_ctime);
       result = diff < t_del * 60;
       break;
     case MTIME:
-      diff = difftime(cur_time, buf.st_mtime);
+      diff = difftime(cur_time, status.st_mtime);
       result = diff < t_del * 60 * 60 * 24;
       break;
     case MMIN:
-      diff = difftime(cur_time, buf.st_mtime);
+      diff = difftime(cur_time, status.st_mtime);
       result = diff < t_del * 60;
       break;
     case ANEWER:
-      diff = difftime(buf.st_atime, cur_time);
+      diff = difftime(status.st_atime, cur_time);
       result = diff > 0;
       break;
     case CNEWER:
-      diff = difftime(buf.st_ctime, cur_time);
+      diff = difftime(status.st_ctime, cur_time);
       result = diff > 0;
       break;
     case MNEWER:
-      diff = difftime(buf.st_mtime, cur_time);
+      diff = difftime(status.st_mtime, cur_time);
       result = diff > 0;
       break;
   }
@@ -486,24 +484,22 @@ void init_filetype(char ft) {
 }
 
 bool filetype_filter(Filter * filter) {
-  struct stat buf;
-  stat(cur_ent->fts_path, &buf);
   char ft = (char)filter->info;
   switch(ft) {
     case 'd':
-      return S_ISDIR(buf.st_mode); 
+      return S_ISDIR(status.st_mode); 
     case 'c':
-      return S_ISCHR(buf.st_mode); 
+      return S_ISCHR(status.st_mode); 
     case 'b':
-      return S_ISBLK(buf.st_mode); 
+      return S_ISBLK(status.st_mode); 
     case 'p':
-      return S_ISFIFO(buf.st_mode); 
+      return S_ISFIFO(status.st_mode); 
     case 'f':
-      return S_ISREG(buf.st_mode); 
+      return S_ISREG(status.st_mode); 
     case 'l':
-      return S_ISLNK(buf.st_mode); 
+      return S_ISLNK(status.st_mode); 
     case 's':
-      return S_ISSOCK(buf.st_mode);
+      return S_ISSOCK(status.st_mode);
     default:
       break;
   }
@@ -521,13 +517,11 @@ bool filesize_filter(Filter * filter) {
   char * str = (char *) (malloc(sizeof(char) * (strlen(filter->info) + 1)));
   char st = 0;
   strcpy(str, filter->info);
-  struct stat buf;
-  stat(cur_ent->fts_path, &buf);
   bool result = false; 
 
-  int bn = buf.st_blocks;
-  int bs = buf.st_blksize;
-  long all_size = buf.st_size;
+  int bn = status.st_blocks;
+  int bs = status.st_blksize;
+  long all_size = status.st_size;
   long e_size;
   if (str[strlen(str)-1] > 58) {
     st = str[strlen(str) - 1];
@@ -581,7 +575,6 @@ bool user_filter(Filter * filter) {
   char * info = (char *) filter->info;
   struct passwd * pwd = NULL;
   int user_id;
-  struct stat buf;
   if (is_int(info)) {
     user_id = atoi(info);
   } else {
@@ -591,8 +584,7 @@ bool user_filter(Filter * filter) {
     }
     user_id = pwd->pw_uid;
   }
-  stat(cur_ent->fts_path, &buf);
-  return user_id == buf.st_uid;
+  return user_id == status.st_uid;
 }
 
 void init_group(char * name) {
@@ -607,7 +599,6 @@ bool group_filter(Filter * filter) {
   char * info = (char *) filter->info;
   struct group * grp = NULL;
   int group_id;
-  struct stat buf;
   if (is_int(info)) {
     grp = atoi(info);
   } else {
@@ -617,8 +608,7 @@ bool group_filter(Filter * filter) {
     }
     group_id = grp->gr_gid;
   }
-  stat(cur_ent->fts_path, &buf);
-  return group_id == buf.st_gid;
+  return group_id == status.st_gid;
 }
 
 void init_perm(char * name) {
@@ -633,12 +623,10 @@ void init_perm(char * name) {
 
 bool perm_filter(Filter * filter) {
   unsigned long ul;
-  struct stat buf;
   char * tmp = (char *) malloc(sizeof(char) * (strlen(filter->info) + 2));
   tmp[0] = '0';
   strcpy(tmp + 1, filter->info);
   ul = strtoul (tmp,NULL,0);
-  stat(cur_ent->fts_path, &buf);
   free(tmp);
-  return PERM_EQUAL(buf.st_mode, ul);
+  return PERM_EQUAL(status.st_mode, ul);
 }

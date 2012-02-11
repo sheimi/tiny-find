@@ -93,7 +93,7 @@ the src folder include:
   filter.h    | build the filter tree and  
   filter.c    | inplement all the filters
 
-  main.c      | the main file of tool and it use api to 
+  tinyfind.c  | the main file of tool and it use api to 
               | traverse a file hierarchy   
 
 ~~~~~~~~~~~~~

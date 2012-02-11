@@ -5,21 +5,18 @@
 
 #include "parser.h"
 
-static char ** post_exp;
-static int post_exp_index;
+static char ** post_exp;      // the postfix expression list
+static int post_exp_index;    // the list size
 
-static char ** help_stack;
-static int stack_index;
+static char ** help_stack;    // the helper stack to build the postfix expression
+static int stack_index;       // the stack length
 
-void init_parser(int argc, char * argv[]);
-void free_parser();
-char * pop_stack();
-char * top_stack();
-void push_stack(char * exp);
-bool stack_empty();
-void push_back_exp(char * exp);
-void set_post_exp(int argc, char * argv[]);
-char * get_exp();
+char * pop_stack();           // pop of the stack
+char * top_stack();           // top of the stack
+void push_stack(char * exp);  // push expression to stack
+bool stack_empty();           // whether the stack is empty
+void push_back_exp(char * exp);             //push exp to post_exp
+void set_post_exp(int argc, char * argv[]); //build post_exp
 
 char * get_exp() {
   static int i = -1;
@@ -29,8 +26,6 @@ char * get_exp() {
   i++;
   return post_exp[i];
 }
-
-
 
 void init_parser(int argc, char * argv[]) {
   post_exp = (char **)(malloc(sizeof(char **) * argc));
@@ -76,14 +71,14 @@ void set_post_exp(int argc, char * argv[]) {
       while (!stack_empty() && IS_NOT_EQUAL(top_stack(), "(")) {
         push_back_exp(pop_stack());
       }
-      pop_stack();
+      pop_stack(); //pop item until there is '('
       if (IS_EQUAL(top_stack(), "-not")) {
         char * tmp = post_exp[post_exp_index - 1];
         if (IS_NOT_EQUAL(tmp, "-and") && IS_NOT_EQUAL(tmp, "-or")) {
           push_back_exp("-and");
         }
         push_back_exp(pop_stack());
-      }
+      } //test whether there is -not
     } else if (IS_EQUAL(exp, "-and")) {
       if (!stack_empty() && IS_EQUAL(top_stack(), "-and")) {
         push_back_exp(exp);

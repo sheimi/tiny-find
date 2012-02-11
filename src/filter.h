@@ -9,8 +9,11 @@
 
 struct filter;
 
-typedef bool (*filter_cmd)(struct filter * f);
+typedef bool (*filter_cmd)(struct filter * f); //define function pointer
 
+/* *
+ * Here is all the Filter Type Name
+ * */
 enum FilterType {
   NOT_FILTER_ADAPTER,
   FNMATCH_FILTER, 
@@ -25,17 +28,17 @@ enum FilterType {
 };
 
 typedef struct filter {
-  enum FilterType ft;
-  filter_cmd cmd;
-  struct filter * passed;
-  struct filter * failed;
-  bool visited;
-  void * info;            //some necessary information
+  enum FilterType ft;     // filer type name
+  filter_cmd cmd;         // filter_cmd
+  struct filter * passed; // if filter returns true
+  struct filter * failed; // if filter returns false
+  bool visited;           // a flag to indicate the node is visited
+  void * info;            // some necessary information
 } Filter;
 
 
-bool execute_filter_tree(FTSENT * ent);
-void init_filter_tree(int argc, char * argv[]);
-void free_filter_tree();
+bool execute_filter_tree(FTSENT * ent);         // to execute the filter tree
+void init_filter_tree(int argc, char * argv[]); // to build the filter tree
+void free_filter_tree();                        // to free all the memery
 
 #endif

@@ -27,6 +27,9 @@ int main(int argc, char * argv[]) {
   free_filter_tree();
 }
 
+/* *
+ * to walk the file hierarchy
+ * */
 static void find(char * path) {
   char * arglist[2];
   FTS * fts;
@@ -50,6 +53,7 @@ static void find(char * path) {
 static void consider_check(FTSENT * ent) {
   bool ignore = false;
 
+  //ignore if the dir is accessed the second time
   if (ent->fts_info == FTS_DP) {
     ignore = true;
   }
@@ -59,7 +63,9 @@ static void consider_check(FTSENT * ent) {
   }
 
 }
-
+/* *
+ *  to check whether the file satisfy the expressions
+ * */
 static void check(FTSENT * ent) {
   if (execute_filter_tree(ent)) {
     fprintf(stdout, "%s\n", ent->fts_path);

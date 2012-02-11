@@ -1,15 +1,15 @@
 CC=gcc
-OBJS=filter.o main.o parser.o
-TARGET=main
+OBJS=filter.o tinyfind.o parser.o
+TARGET=tinyfind
 CFLAG = -Wall
 
-main: filter.o main.o parser.o
+tinyfind: filter.o tinyfind.o parser.o
 	$(CC) $(OBJS) -o $(TARGET) 
 
-main.o: main.c
+tinyfind.o: tinyfind.c
 	$(CC)  $(CFLAG) -c $<
 
-filter.o: filter.c
+filter.o: filter.c 
 	$(CC) $(CFLAG) -c $<
 
 parser.o: parser.c

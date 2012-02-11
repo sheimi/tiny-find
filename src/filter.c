@@ -26,7 +26,7 @@ static int filter_list_len;
 /* *
  *  for time filter
  * */
-enum time_type {ATIME, AMIN, CTIME, CMIN, ANEWER, CNEWER};
+enum time_type {ATIME, AMIN, ANEWER, CTIME, CMIN, CNEWER, MTIME, MMIN, MNEWER};
 
 struct time_info {
   enum time_type tt;
@@ -199,7 +199,7 @@ void init_filter_tree(int argc, char * argv[]) {
       init_time(ANEWER, optarg);
     } else if (IS_EQUAL(exp, "-cnewer")) {
       optarg = get_exp();
-      fprintf(stderr, "test fiel is %s\n", optarg);
+      fprintf(stderr, "test file is %s\n", optarg);
       init_time(CNEWER, optarg);
     } else if (IS_EQUAL(exp, "-cmin")) {
       optarg = get_exp();
@@ -209,6 +209,18 @@ void init_filter_tree(int argc, char * argv[]) {
       optarg = get_exp();
       fprintf(stderr, "day delta is %s\n", optarg);
       init_time(CTIME, optarg);
+    } else if (IS_EQUAL(exp, "-mtime")) {
+      optarg = get_exp();
+      fprintf(stderr, "day delta is %s\n", optarg);
+      init_time(MTIME, optarg);
+    } else if (IS_EQUAL(exp, "-mmin")) {
+      optarg = get_exp();
+      fprintf(stderr, "min delta is %s\n", optarg);
+      init_time(MMIN, optarg);
+    } else if (IS_EQUAL(exp, "-mnewer")) {
+      optarg = get_exp();
+      fprintf(stderr, "test file is %s\n", optarg);
+      init_time(MNEWER, optarg);
     } else if (IS_EQUAL(exp, "-type")) {
       optarg = get_exp();
       fprintf(stderr, "file type is %s\n", optarg);
@@ -261,7 +273,8 @@ void _free_filter(Filter * filter) {
       break;
     case TIME_FILTER:
       if (((struct time_info *)(filter->info))->tt == ANEWER 
-          || ((struct time_info *)(filter->info))->tt == CNEWER)
+          || ((struct time_info *)(filter->info))->tt == CNEWER
+          || ((struct time_info *)(filter->info))->tt == MNEWER)
         free(((struct time_info *)(filter->info))->value);
       free(filter->info);
       break;
@@ -361,13 +374,15 @@ void init_time(enum time_type tt, char * pattern) {
   struct time_info * ti = malloc(sizeof(struct time_info));
   struct stat buf;
   ti->tt = tt;
-  if (tt == ANEWER || tt == CNEWER) {
+  if (tt == ANEWER || tt == CNEWER || tt == MNEWER) {
     stat(pattern, &buf);
     time_t * time = (time_t)malloc(sizeof(time_t)); 
     if (tt == ANEWER) {
       *time = buf.st_atime;
-    } else {
+    } else if (tt == CNEWER) {
       *time = buf.st_ctime;
+    } else {
+      *time = buf.st_mtime;
     }
     ti->value = time;
   } else { 
@@ -414,12 +429,24 @@ bool time_filter(Filter * filter) {
       diff = difftime(cur_time, buf.st_ctime);
       result = diff < t_del * 60;
       break;
+    case MTIME:
+      diff = difftime(cur_time, buf.st_mtime);
+      result = diff < t_del * 60 * 60 * 24;
+      break;
+    case MMIN:
+      diff = difftime(cur_time, buf.st_mtime);
+      result = diff < t_del * 60;
+      break;
     case ANEWER:
       diff = difftime(buf.st_atime, cur_time);
       result = diff > 0;
       break;
     case CNEWER:
       diff = difftime(buf.st_ctime, cur_time);
+      result = diff > 0;
+      break;
+    case MNEWER:
+      diff = difftime(buf.st_mtime, cur_time);
       result = diff > 0;
       break;
   }

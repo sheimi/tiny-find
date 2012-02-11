@@ -116,7 +116,8 @@ a. Filter Tree And Filter
          |
         true
    Filter contains a pointer to a filter_cmd.
-     filter_cmd  | a function pointer which contains the test function to test                  | whether a file can meets a expression
+     filter_cmd  | a function pointer which contains the test function to test   
+                 | whether a file can meets a expression
    Filter contains a FilterType.
      FilterType  | it is a enum and cantains the type information of a filter
    Filter contains a void pointer, info.

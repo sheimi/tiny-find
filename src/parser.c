@@ -25,7 +25,15 @@ char * ALL_EXP[] = {
   "-size",
 };
 
+char * OPTIONS[] = {
+  "-exec",
+  "-depth",
+  "-maxdepth",
+  "-mindepth",
+};
+
 int ALL_EXP_LEN = 17;
+int OPTIONS_LEN = 0;
 
 
 static char ** post_exp;      // the postfix expression list
@@ -40,6 +48,8 @@ void push_stack(char * exp);  // push expression to stack
 bool stack_empty();           // whether the stack is empty
 void push_back_exp(char * exp);             //push exp to post_exp
 void set_post_exp(int argc, char * argv[]); //build post_exp
+bool is_logic_op(char * exp);
+bool is_options(char * exp);
 
 char * get_exp() {
   static int i = -1;
@@ -57,6 +67,20 @@ bool is_exp(char * arg) {
       return true;
   } 
   return false;
+}
+
+bool is_options(char * arg) {
+  int i;
+  for (i = 0; i < OPTIONS_LEN; i++) {
+    if (IS_EQUAL(arg, OPTIONS[i]))
+      return true;
+  } 
+  return false;
+}
+
+bool is_logic_op(char * exp) {
+  return IS_EQUAL(exp, "-and") || IS_EQUAL(exp, "-or") || IS_EQUAL(exp, "-not")
+         || IS_EQUAL(exp, "(") || IS_EQUAL(exp, ")");
 }
 
 void init_parser(int argc, char * argv[]) {
@@ -94,12 +118,40 @@ bool stack_empty() {
 }
 
 void set_post_exp(int argc, char * argv[]) {
-  int i;
+  int i = 1;
   bool flag_c1 = false;
   bool flag_c2 = false;
-  for (i = 2; i < argc; i++) {
+
+  while (argv[i][0] == '-') {
+    i++;
+  }
+
+  options.find_dir = argv[i];
+  i++;
+
+  for (; i < argc; i++) {
     char * exp = argv[i];
-    if (IS_EQUAL(exp, "(")) {
+    if (IS_EQUAL(exp, "-depth")) {
+      i++;
+      options.max_depth = atoi(argv[i]);
+      options.min_depth = atoi(argv[i]);
+    } else if (IS_EQUAL(exp, "-maxdepth")) {
+      i++;
+      options.max_depth = atoi(argv[i]);
+    } else if (IS_EQUAL(exp, "-mindepth")) {
+      i++;
+      options.min_depth = atoi(argv[i]);
+    } else if (IS_EQUAL(exp, "-exec")) {
+      int count = i;
+      i++;
+      options.is_exec = true;
+      options.argv = &argv[i];
+      while (argv[i + 1][0] != ';') {
+        i++;
+      }
+      options.argc = i - count + 1;
+      i++;
+    } else if (IS_EQUAL(exp, "(")) {
       push_stack(exp);
     } else if (IS_EQUAL(exp, ")")) {
       while (!stack_empty() && IS_NOT_EQUAL(top_stack(), "(")) {

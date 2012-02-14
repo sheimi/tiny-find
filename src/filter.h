@@ -38,7 +38,7 @@ typedef struct filter {
 
 
 bool execute_filter_tree(FTSENT * ent);         // to execute the filter tree
-void init_filter_tree(int argc, char * argv[]); // to build the filter tree
+void init_filter_tree(int argc); // to build the filter tree
 void free_filter_tree();                        // to free all the memery
 
 #endif

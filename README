@@ -24,6 +24,8 @@ exps can linked with logic expression and '(', ')'
 ~~~~~~~~~
 Functions
 ~~~~~~~~~
+-exec [argv] \;
+  if it is true, excute the cmd.(default: print) 
 -name
   True if the last component of the pathname being examined matches pattern.
   Special shell pattern matching characters (``['', ``]'', ``*'', and ``?'')

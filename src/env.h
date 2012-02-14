@@ -8,4 +8,15 @@ typedef int bool;     // define bool type
 #define IS_EQUAL(s1, s2) (strcmp(s1, s2) == 0)     // define two str is equal
 #define IS_NOT_EQUAL(s1, s2) (strcmp(s1, s2) != 0) // define two str is not equal
 
+typedef struct find_option {
+  char * find_dir;
+  int min_depth;
+  int max_depth;
+  bool is_exec;
+  char ** argv;
+  int argc;
+} FindOption;
+
+extern FindOption options;
+
 #endif

@@ -1,6 +1,3 @@
-#include "filter.h"
-#include "parser.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -15,6 +12,9 @@
 #include <math.h>
 #include <pwd.h>
 #include <grp.h>
+
+#include "parser.h"
+#include "filter.h"
 
 static Filter filter_tree;        // whether the filter is filter
 
@@ -198,10 +198,9 @@ static void filter_not() {
 /*
  * interface, not static 
  */
-void init_filter_tree(int argc, char * argv[]) {
+void init_filter_tree(int argc) {
   char * exp;
   
-  init_parser(argc, argv);
   init_op_stack(argc);
 
 
@@ -295,7 +294,6 @@ void init_filter_tree(int argc, char * argv[]) {
   }
   filter_tree.passed = op_stack[0];
   free_op_stack();
-  free_parser();
 }
 
 /**

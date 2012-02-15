@@ -53,6 +53,9 @@ static bool not_filter_adapter(Filter * filter);
 static void set_not_adapter_info (Filter * filter, Filter * inner_filter); 
 
 //filters
+static bool true_filter(Filter * filter);
+static void init_true(); 
+
 static void init_reg(char * pattern);
 static bool reg_filter(Filter * filter);
 
@@ -195,11 +198,28 @@ static void filter_not() {
   push_op_stack(nfa);
 }
 
+
+/* *
+ * helper function to get the args
+ * */
+static char * _get_arg(char * name) {
+  char * exp = get_exp();
+  if (exp == NULL) {
+    require_arg(name);
+  } 
+#ifdef DEBUG
+  fprintf(stderr, "expression is %s\n", name);
+  fprintf(stderr, "arg is %s\n", exp);
+#endif
+  return exp;
+}
+
 /*
  * interface, not static 
  */
 void init_filter_tree(int argc) {
   char * exp;
+  int exp_num = 0;
   
   init_op_stack(argc);
 
@@ -209,88 +229,78 @@ void init_filter_tree(int argc) {
   filter_list = (Filter **)(malloc(sizeof(Filter) * argc));
 
   while((exp = get_exp()) != NULL) {
+    exp_num++;
     char * optarg;
     //all the exps
     if (IS_EQUAL(exp, "-name")) {
-      optarg = get_exp();
-      fprintf(stderr, "filename is %s\n", optarg);
+      optarg = _get_arg("-name");
       init_fnmatch(optarg, true);
     } else if (IS_EQUAL(exp, "-iname")) {
-      optarg = get_exp();
-      fprintf(stderr, "filename is %s\n", optarg);
+      optarg = _get_arg("-iname");
       init_fnmatch(optarg, false);
     } else if (IS_EQUAL(exp, "-user")) {
-      optarg = get_exp();
-      fprintf(stderr, "user is %s\n", optarg);
+      optarg = _get_arg("-user");
       init_user(optarg);
     } else if (IS_EQUAL(exp, "-group")) {
-      optarg = get_exp();
-      fprintf(stderr, "group is %s\n", optarg);
+      optarg = _get_arg("-group");
       init_group(optarg);
     } else if (IS_EQUAL(exp, "-perm")) {
-      optarg = get_exp();
-      fprintf(stderr, "perm is %s\n", optarg);
+      optarg = _get_arg("-perm");
       init_perm(optarg);
     } else if (IS_EQUAL(exp, "-regex")) {
-      optarg = get_exp();
-      fprintf(stderr, "regex is %s\n", optarg);
+      optarg = _get_arg("-regex");
       init_reg(optarg);
     } else if (IS_EQUAL(exp, "-amin")) {
-      optarg = get_exp();
-      fprintf(stderr, "min deltais %s\n", optarg);
+      optarg = _get_arg("-amin");
       init_time(AMIN, optarg);
     } else if (IS_EQUAL(exp, "-atime")) {
-      optarg = get_exp();
-      fprintf(stderr, "day delta is %s\n", optarg);
+      optarg = _get_arg("-atime");
       init_time(ATIME, optarg);
     } else if (IS_EQUAL(exp, "-anewer")) {
-      optarg = get_exp();
-      fprintf(stderr, "test file is %s\n", optarg);
+      optarg = _get_arg("-anewer");
       init_time(ANEWER, optarg);
     } else if (IS_EQUAL(exp, "-cnewer")) {
-      optarg = get_exp();
-      fprintf(stderr, "test file is %s\n", optarg);
+      optarg = _get_arg("-cnewer");
       init_time(CNEWER, optarg);
     } else if (IS_EQUAL(exp, "-cmin")) {
-      optarg = get_exp();
-      fprintf(stderr, "min deltais %s\n", optarg);
+      optarg = _get_arg("-cmin");
       init_time(CMIN, optarg);
     } else if (IS_EQUAL(exp, "-ctime")) {
-      optarg = get_exp();
-      fprintf(stderr, "day delta is %s\n", optarg);
+      optarg = _get_arg("-ctime");
       init_time(CTIME, optarg);
     } else if (IS_EQUAL(exp, "-mtime")) {
-      optarg = get_exp();
-      fprintf(stderr, "day delta is %s\n", optarg);
-      init_time(MTIME, optarg);
-    } else if (IS_EQUAL(exp, "-mmin")) {
-      optarg = get_exp();
-      fprintf(stderr, "min delta is %s\n", optarg);
+      optarg = _get_arg("-mtime");
       init_time(MMIN, optarg);
     } else if (IS_EQUAL(exp, "-mnewer")) {
-      optarg = get_exp();
-      fprintf(stderr, "test file is %s\n", optarg);
+      optarg = _get_arg("-mnewer");
       init_time(MNEWER, optarg);
     } else if (IS_EQUAL(exp, "-type")) {
-      optarg = get_exp();
-      fprintf(stderr, "file type is %s\n", optarg);
+      optarg = _get_arg("-type");
       init_filetype(optarg);
     } else if (IS_EQUAL(exp, "-size")) {
-      optarg = get_exp();
-      fprintf(stderr, "file size is %s\n", optarg);
+      optarg = _get_arg("-size");
       init_filesize(optarg);
     } else if (IS_EQUAL(exp, "-not")) {
+#ifdef DEBUG
       fprintf(stderr, "filter not adapter\n");
+#endif
       filter_not();
     } else if (IS_EQUAL(exp, "-and")) {
+#ifdef DEBUG
       fprintf(stderr, "filter and\n");
+#endif
       filter_and();
     } else if (IS_EQUAL(exp, "-or")) {
+#ifdef DEBUG
       fprintf(stderr, "filter or\n");
+#endif
       filter_or();
     } else {
       //TODO
     }
+  }
+  if (exp_num == 0) {
+    init_true(); 
   }
   filter_tree.passed = op_stack[0];
   free_op_stack();
@@ -650,4 +660,18 @@ static bool perm_filter(Filter * filter) {
   ul = strtoul (tmp,NULL,0);
   free(tmp);
   return PERM_EQUAL(status.st_mode, ul);
+}
+
+
+/* *
+ * a filter that is always returns true
+ * */
+static bool true_filter(Filter * filter) { 
+  return true; 
+}
+static void init_true() {
+  Filter * filter = init_filter();
+  filter->ft = TRUE_FILTER;
+  filter->cmd = true_filter;
+  push_op_stack(filter);
 }

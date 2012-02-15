@@ -11,12 +11,25 @@ typedef int bool;     // define bool type
 enum SymbolHandle {S_L, S_P, S_H};
 
 typedef struct find_option {
-  char * find_dir;
+  int  pathes_num; 
+  char ** find_pathes;
+
   int min_depth;
   int max_depth;
+
   bool is_exec;
   char ** argv;
   int argc;
+
+  bool is_ok;
+  char ** ok_argv;
+  int ok_argc;
+
+  bool is_print;
+  bool is_print0;
+
+  bool no_actions;
+
   enum SymbolHandle symbol_handle; 
 } FindOption;
 
@@ -24,5 +37,6 @@ extern FindOption options;
 extern const char * USAGE;
 
 void print_error(const char * message);
+void require_arg(const char * exp);
 
 #endif

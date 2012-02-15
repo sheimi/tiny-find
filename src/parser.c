@@ -27,6 +27,8 @@ char * ALL_EXP[] = {
 
 char * OPTIONS[] = {
   "-exec",
+  "-print0",
+  "-print",
   "-depth",
   "-maxdepth",
   "-mindepth",
@@ -122,25 +124,34 @@ void set_post_exp(int argc, char * argv[]) {
   bool flag_c1 = false;
   bool flag_c2 = false;
 
+  //parse options
   while (i < argc && argv[i][0] == '-') {
     char * exp = argv[i];
+    i++;
     if (IS_EQUAL(exp, "-L")) {
       options.symbol_handle = S_L;
     } else if (IS_EQUAL(exp, "-P")) {
       options.symbol_handle = S_P;
     } else if (IS_EQUAL(exp, "-H")) {
       options.symbol_handle = S_H;
+    } else if (IS_EQUAL(exp, "-f")) {
+      break;
     }
-    i++;
   }
 
+
+  //parse path
   if (i >= argc) {
     print_error(USAGE);
   }
 
-  options.find_dir = argv[i];
-  i++;
+  options.find_pathes = &argv[i];
+  while (i < argc && argv[i][0] != '-') {
+    options.pathes_num++;
+    i++;
+  }
 
+  //parse actions and expressions
   for (; i < argc; i++) {
     char * exp = argv[i];
     if (IS_EQUAL(exp, "-depth")) {
@@ -157,12 +168,30 @@ void set_post_exp(int argc, char * argv[]) {
       int count = i;
       i++;
       options.is_exec = true;
+      options.no_actions = false;
       options.argv = &argv[i];
       while (argv[i + 1][0] != ';') {
         i++;
       }
       options.argc = i - count + 1;
       i++;
+    } else if (IS_EQUAL(exp, "-ok")) {
+      int count = i;
+      i++;
+      options.is_ok= true;
+      options.no_actions = false;
+      options.ok_argv = &argv[i];
+      while (argv[i + 1][0] != ';') {
+        i++;
+      }
+      options.ok_argc = i - count + 1;
+      i++;
+    } else if (IS_EQUAL(exp, "-print")) {
+      options.no_actions = false;
+      options.is_print = true;
+    } else if (IS_EQUAL(exp, "-print0")) {
+      options.no_actions = false;
+      options.is_print0 = true;
     } else if (IS_EQUAL(exp, "(")) {
       push_stack(exp);
     } else if (IS_EQUAL(exp, ")")) {
@@ -214,11 +243,13 @@ void set_post_exp(int argc, char * argv[]) {
     push_back_exp(pop_stack());
   }
 
-  fprintf(stderr, "\n\n");
+#ifdef DEBUG
+  fprintf(stderr, "\n");
   for (i = 0; i < post_exp_index; i++) {
     fprintf(stderr, "%s\n", post_exp[i]);
   }
-  fprintf(stderr, "\n\n");
+  fprintf(stderr, "\n");
+#endif
 }
 
 void free_parser() {

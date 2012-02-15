@@ -147,16 +147,16 @@ Homework -- to fake a command -- find >_<!~~~
     that's all
 
 ## COMPARISON
-It can have a tree of test functions 'predicate tree'
-It uses 'fts' api to traverse a file hierarchy
-pred.c    | it contains all the test functions
-tree.c    | to connect all the test functions into a tree
+    It can have a tree of test functions 'predicate tree'
+    It uses 'fts' api to traverse a file hierarchy
+    pred.c    | it contains all the test functions
+    tree.c    | to connect all the test functions into a tree
 
-In my version of 'find', filter tree plays a similar role as tree 
-and filter plays a similar role as predicate.
+    In my version of 'find', filter tree plays a similar role as tree 
+    and filter plays a similar role as predicate.
 
-The offical 'find' also has a parser to parse the bash parameters, but it is
-more powerful.
+    The offical 'find' also has a parser to parse the bash parameters, but it is
+    more powerful.
 
 
 

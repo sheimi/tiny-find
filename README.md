@@ -1,6 +1,6 @@
 TINY-FIND 
 ==============
-Homework -- to fake a command like find >_<!~~~
+Homework -- to fake a command -- find >_<!~~~
 
 ## OVERVIEW
     This is my homework of "Linux Programming". 
@@ -86,7 +86,7 @@ Homework -- to fake a command like find >_<!~~~
 
 ## DESIGN
 ### SOURCE FILES
-    the src folder include:
+    the src folder includes:
       Makefile    the makefile of the tool
       env.h       | global include, define, and struct
 

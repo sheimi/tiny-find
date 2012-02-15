@@ -1,6 +1,6 @@
 TINY-FIND 
 ==============
-Homework -- to fake a command like find >_<!~~~
+Homework -- to fake a command -- find >_<!~~~
 
 -----------
 1. OVERVIEW
@@ -102,7 +102,7 @@ EXPRESSIONS
 ~~~~~~~~~~~~
 SOURCE FILES
 ~~~~~~~~~~~~
-the src folder include:
+the src folder includes:
   Makefile    the makefile of the tool
   env.h       | global include, define, and struct
 

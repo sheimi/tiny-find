@@ -2,34 +2,24 @@ TINY-FIND
 ==============
 Homework -- to fake a command like find >_<!~~~
 
------------
-1. OVERVIEW
------------
+##OVERVIEW
 This is my homework of "Linux Programming". 
 This is the of "Tiny Find", my version of "find".
 
-~~~~
-MAKE
-~~~~
+###MAKE
 make or make DEBUG=1 for debug version
 
-----------------
-2. SPECIFICATION
-----------------
+##SPECIFICATION
 usage: tinyfind [-H | -L | -P] [-EXdsx] [-f path] path ... [expression]
        tinyfind [-H | -L | -P] [-EXdsx] -f path [path ...] [expression]
-~~~~~~~~~~~~~~~~
-Logic Expression
-~~~~~~~~~~~~~~~~
+###Logic Expression
 exps can linked with logic expression and '(', ')' 
 -not
 -and
 -or
 '(', ')' should be used after Escape character \. exp '\(' and '\(' 
 
-~~~~~~~
-ACTIONS
-~~~~~~~
+###ACTIONS
 -exec [argv] \;
   if it is true, excute the cmd. 
 -ok [argv] \;
@@ -40,9 +30,7 @@ ACTIONS
   if it is true, printf it without '\n'
 
 
-~~~~~~~~~~~
-EXPRESSIONS
-~~~~~~~~~~~
+###EXPRESSIONS
 -name
   True if the last component of the pathname being examined matches pattern.
   Special shell pattern matching characters (``['', ``]'', ``*'', and ``?'')
@@ -96,12 +84,8 @@ EXPRESSIONS
     T       terabytes (1024 gigabytes)
     P       petabytes (1024 terabytes)
 
----------
-3. DESIGN
----------
-~~~~~~~~~~~~
-SOURCE FILES
-~~~~~~~~~~~~
+##DESIGN
+###SOURCE FILES
 the src folder include:
   Makefile    the makefile of the tool
   env.h       | global include, define, and struct
@@ -115,25 +99,10 @@ the src folder include:
   tinyfind.c  | the main file of tool and it use api to 
               | traverse a file hierarchy   
 
-~~~~~~~~~~~~~
-FILTER DESIGN
-~~~~~~~~~~~~~
+###FILTER DESIGN
 a. Filter Tree And Filter
    Filter tree is a binary tree with node has a two pointer, passed and failed.
    If the filter fails, it will exicute the filter that failed pointer pointed.
-   For example:
-     Filter Tree
-        root
-         |
-      filter1 --<test fail>-- filter2--<test fail>--false
-         |                      |
-    <test pass>              <test pass>
-         |                      |
-      filter3--<return if      true
-         |           fail >
-    <test pass>
-         |
-        true
    Filter contains a pointer to a filter_cmd.
      filter_cmd  | a function pointer which contains the test function to test   
                  | whether a file can meets a expression
@@ -157,37 +126,27 @@ c. RELEASE the Filter Tree
    if a filter should release the information in filter, it should be add to
    the _free_filter fuction. 
 
------------
-4. FLEXIBLE
------------
-~~~~~~~~~~~~~~~~~~
-ADD A EXPRESSION
-~~~~~~~~~~~~~~~~~~
+##FLEXIBLE
+###ADD A EXPRESSION
 a. add the name of the  expression to FilterType in 'filter.h' and ALL_EXP
    in 'parser.c'
 b. impelment function init_xxx and xxx_filter in 'filter.c'
 c. register the filter to the init_filter_tree function in 'filter.c' 
 that's all
-~~~~~~~~~~~~
-ADD A ACTION
-~~~~~~~~~~~~
+###ADD A ACTION
 a. add the name of the action to ALL_OPTIONS in 'parser.c'
 b. add flags in options
 c. add some code of the action in set_post_exp in 'parser.c'
 d. add the operation in function check in 'tinyfind.c'
 that's all
-~~~~~~~~~~~~
-ADD A OPTION
-~~~~~~~~~~~~
+###ADD A OPTION
 a. add the name of the option to ALL_OPTIONS in 'parser.c'
 b. add flags in options
 c. add some code of the option  in set_post_exp in 'parser.c'
 d. add the operation in function find in 'tinyfind.c'
 that's all
 
--------------
-5. COMPARISON
--------------
+##COMPARISON
 It can have a tree of test functions 'predicate tree'
 It uses 'fts' api to traverse a file hierarchy
 pred.c    | it contains all the test functions

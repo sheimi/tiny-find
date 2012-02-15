@@ -1,7 +1,7 @@
 CC=gcc
 OBJS=filter.o tinyfind.o parser.o
 TARGET=tinyfind
-CFLAG = -Wall
+CFLAG = -Wall -g
 
 tinyfind: filter.o tinyfind.o parser.o
 	$(CC) $(OBJS) -o $(TARGET) 

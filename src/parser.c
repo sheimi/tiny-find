@@ -122,8 +122,20 @@ void set_post_exp(int argc, char * argv[]) {
   bool flag_c1 = false;
   bool flag_c2 = false;
 
-  while (argv[i][0] == '-') {
+  while (i < argc && argv[i][0] == '-') {
+    char * exp = argv[i];
+    if (IS_EQUAL(exp, "-L")) {
+      options.symbol_handle = S_L;
+    } else if (IS_EQUAL(exp, "-P")) {
+      options.symbol_handle = S_P;
+    } else if (IS_EQUAL(exp, "-H")) {
+      options.symbol_handle = S_H;
+    }
     i++;
+  }
+
+  if (i >= argc) {
+    print_error(USAGE);
   }
 
   options.find_dir = argv[i];

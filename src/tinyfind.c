@@ -13,15 +13,31 @@
 
 FindOption options;
 
-static int fts_option = FTS_NOSTAT;
 static void find(char * path);
-static void consider_check(FTSENT * ent);
+static void consider_check(FTS * fts, FTSENT * ent);
 static void check(FTSENT * ent);
 static void init_option();
 static void free_option();
 static void execute_exec(int argc, char ** argv, char * path);
 
+const char * USAGE = 
+"usage: tinyfind [-H | -L | -P] [-EXdsx] [-f path] path ... [expression]\n"
+"       tinyfind [-H | -L | -P] [-EXdsx] -f path [path ...] [expression]\n";
+
+void print_error(const char * message) {
+  if (message != NULL) {
+    fputs(message, stderr);
+  } else {
+    fputs("encounter a error, exit", stderr);
+  }
+  exit(1);
+}
+
+
 int main(int argc, char * argv[]) {
+  if (argc < 2) {
+    print_error(USAGE);
+  }
 
   init_option();
   //parse options and build filter tree
@@ -42,6 +58,8 @@ int main(int argc, char * argv[]) {
 /* *
  * to walk the file hierarchy
  * */
+static int fts_option = FTS_NOSTAT;
+
 static void find(char * path) {
   char * arglist[2];
   FTS * fts;
@@ -52,22 +70,43 @@ static void find(char * path) {
   
   //TODO ftsoption config
 
+  switch (options.symbol_handle) {
+    case S_L:
+      fts_option |= FTS_COMFOLLOW|FTS_LOGICAL;
+      break;
+    case S_P:
+      fts_option |= FTS_COMFOLLOW|FTS_PHYSICAL;
+      break;
+    case S_H:
+      fts_option |= FTS_PHYSICAL;
+      break;
+  }
+
   fts = fts_open(arglist, fts_option, NULL);
   
   //TODO check fts
 
   //travel
   while ((ent = fts_read(fts)) != NULL) {
-    consider_check(ent);
+    consider_check(fts, ent);
   }
 }
 
-static void consider_check(FTSENT * ent) {
+static void consider_check(FTS * fts, FTSENT * ent) {
   bool ignore = false;
 
   //ignore if the dir is accessed the second time
   if (ent->fts_info == FTS_DP) {
     ignore = true;
+  }
+
+  //max_depth
+  if (options.max_depth >=0 && ent->fts_level >= options.max_depth) {
+    fts_set(fts, ent, FTS_SKIP);
+    if (ent->fts_level > options.max_depth)
+      ignore = true;
+  } else if (options.min_depth >=0 && ent->fts_level < options.min_depth) {
+    ignore = true; 
   }
 
   if (!ignore) {
@@ -90,7 +129,7 @@ static void check(FTSENT * ent) {
 
 static void init_option() {
   memset(&options, 0, sizeof(FindOption)); 
-  options.min_depth = -1;
+  options.max_depth = -1;
   options.min_depth = -1;
 }
 

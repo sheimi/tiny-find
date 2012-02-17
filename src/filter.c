@@ -100,7 +100,24 @@ int execute_filter(Filter * filter) {
 }
 
 bool execute_filter_tree(FTSENT * ent) {
-  stat(ent->fts_path, &status); 
+#ifdef DEBUG
+  fprintf(stderr, "file level: %d\n", ent->fts_level);
+#endif
+  switch(options.symbol_handle) {
+    case S_L:
+      stat(ent->fts_path, &status); 
+      break;
+    case S_P:
+      lstat(ent->fts_path, &status); 
+      break;
+    case S_H:
+      if (ent->fts_level <= 1) {
+        stat(ent->fts_path, &status); 
+      } else {
+        lstat(ent->fts_path, &status); 
+      }
+      break;
+  }
   cur_ent = ent;
   bool passed = execute_filter(filter_tree.passed);
   return passed;

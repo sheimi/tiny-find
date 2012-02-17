@@ -1,6 +1,6 @@
 TINY-FIND 
 ==============
-Homework -- to fake a command -- find >_<!~~~
+    Homework -- to fake a command -- find >_<!~~~
 
 ## OVERVIEW
     This is my homework of "Linux Programming". 
@@ -12,7 +12,27 @@ Homework -- to fake a command -- find >_<!~~~
 ## SPECIFICATION
     usage: tinyfind [-H | -L | -P] [-EXdsx] [-f path] path ... [expression]
            tinyfind [-H | -L | -P] [-EXdsx] -f path [path ...] [expression]
-### Logic Expression
+### OPTIONS
+    -H      Cause the file information and file type (see stat(2)) returned
+            for each symbolic link specified on the command line to be those
+            of the file referenced by the link, not the link itself.  If the
+            referenced file does not exist, the file information and type
+            will be for the link itself.  File information of all symbolic
+            links not on the command line is that of the link itself.
+
+    -L      Cause the file information and file type (see stat(2)) returned
+            for each symbolic link to be those of the file referenced by the
+            link, not the link itself.  If the referenced file does not
+            exist, the file information and type will be for the link itself.
+            This option is equivalent to the deprecated -follow primary.
+
+    -P      Cause the file information and file type (see stat(2)) returned
+            for each symbolic link to be those of the link itself.  This is
+            the default.
+
+
+
+### LOGIC EXPRESSIONS
     exps can linked with logic expression and '(', ')' 
     -not
     -and

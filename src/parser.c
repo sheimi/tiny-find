@@ -26,6 +26,9 @@ char * ALL_EXP[] = {
 };
 
 char * OPTIONS[] = {
+  "-P",
+  "-H",
+  "-L",
   "-exec",
   "-print0",
   "-print",

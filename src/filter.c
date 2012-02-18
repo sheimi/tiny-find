@@ -111,7 +111,7 @@ bool execute_filter_tree(FTSENT * ent) {
       lstat(ent->fts_path, &status); 
       break;
     case S_H:
-      if (ent->fts_level <= 1) {
+      if (ent->fts_level == 0) {
         stat(ent->fts_path, &status); 
       } else {
         lstat(ent->fts_path, &status); 
@@ -474,7 +474,7 @@ static bool time_filter(Filter * filter) {
 
   bool result = false;
   
-  if (tt == ANEWER || tt == CNEWER) {
+  if (tt == ANEWER || tt == CNEWER || tt == MNEWER) {
     cur_time = *(time_t *)ti->value;
   } else {
     t_del= atoi(ti->value);
@@ -483,39 +483,39 @@ static bool time_filter(Filter * filter) {
   switch(tt) {
     case ATIME:
       diff = difftime(cur_time, status.st_atime);
-      result = diff < t_del * 60 * 60 * 24;
+      result = diff > t_del * 60 * 60 * 24;
       break;
     case AMIN:
       diff = difftime(cur_time, status.st_atime);
-      result = diff < t_del * 60;
+      result = diff > t_del * 60;
       break;
     case CTIME:
       diff = difftime(cur_time, status.st_ctime);
-      result = diff < t_del * 60 * 60 * 24;
+      result = diff > t_del * 60 * 60 * 24;
       break;
     case CMIN:
       diff = difftime(cur_time, status.st_ctime);
-      result = diff < t_del * 60;
+      result = diff > t_del * 60;
       break;
     case MTIME:
       diff = difftime(cur_time, status.st_mtime);
-      result = diff < t_del * 60 * 60 * 24;
+      result = diff > t_del * 60 * 60 * 24;
       break;
     case MMIN:
       diff = difftime(cur_time, status.st_mtime);
-      result = diff < t_del * 60;
+      result = diff > t_del * 60;
       break;
     case ANEWER:
       diff = difftime(status.st_atime, cur_time);
-      result = diff > 0;
+      result = diff >= 0.0;
       break;
     case CNEWER:
       diff = difftime(status.st_ctime, cur_time);
-      result = diff > 0;
+      result = diff >= 0.0;
       break;
     case MNEWER:
       diff = difftime(status.st_mtime, cur_time);
-      result = diff > 0;
+      result = diff >= 0.0;
       break;
   }
   return result;

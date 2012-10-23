@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=640" />
+
+    <link rel="stylesheet" href="stylesheets/core.css" media="screen"/>
+    <link rel="stylesheet" href="stylesheets/mobile.css" media="handheld, only screen and (max-device-width:640px)"/>
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css"/>
+
+    <script type="text/javascript" src="javascripts/modernizr.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="javascripts/headsmart.min.js"></script>
+    <script type="text/javascript">
+      $(document).ready(function () {
+        $('#main_content').headsmart()
+      })
+    </script>
+    <title>Tiny-find by sheimi</title>
+  </head>
+
+  <body>
+    <a id="forkme_banner" href="https://github.com/sheimi/tiny-find">View on GitHub</a>
+    <div class="shell">
+
+      <header>
+        <span class="ribbon-outer">
+          <span class="ribbon-inner">
+            <h1>Tiny-find</h1>
+            <h2>homeword to fake a find command in linux</h2>
+          </span>
+          <span class="left-tail"></span>
+          <span class="right-tail"></span>
+        </span>
+      </header>
+
+      <section id="downloads">
+        <span class="inner">
+          <a href="https://github.com/sheimi/tiny-find/zipball/master" class="zip"><em>download</em> .ZIP</a><a href="https://github.com/sheimi/tiny-find/tarball/master" class="tgz"><em>download</em> .TGZ</a>
+        </span>
+      </section>
+
+
+      <span class="banner-fix"></span>
+
+
+      <section id="main_content">
+        <h1>TINY-FIND </h1>
+
+<pre><code>Homework -- to fake a command -- find &gt;_&lt;!~~~
+</code></pre>
+
+<h2>OVERVIEW</h2>
+
+<pre><code>This is my homework of "Linux Programming". 
+This is the of "Tiny Find", my version of "find".
+</code></pre>
+
+<h3>MAKE</h3>
+
+<pre><code>make or make DEBUG=1 for debug version
+</code></pre>
+
+<h2>SPECIFICATION</h2>
+
+<pre><code>usage: tinyfind [-H | -L | -P] [-EXdsx] [-f path] path ... [expression]
+       tinyfind [-H | -L | -P] [-EXdsx] -f path [path ...] [expression]
+</code></pre>
+
+<h3>OPTIONS</h3>
+
+<pre><code>-H      Cause the file information and file type (see stat(2)) returned
+        for each symbolic link specified on the command line to be those
+        of the file referenced by the link, not the link itself.  If the
+        referenced file does not exist, the file information and type
+        will be for the link itself.  File information of all symbolic
+        links not on the command line is that of the link itself.
+
+-L      Cause the file information and file type (see stat(2)) returned
+        for each symbolic link to be those of the file referenced by the
+        link, not the link itself.  If the referenced file does not
+        exist, the file information and type will be for the link itself.
+        This option is equivalent to the deprecated -follow primary.
+
+-P      Cause the file information and file type (see stat(2)) returned
+        for each symbolic link to be those of the link itself.  This is
+        the default.
+</code></pre>
+
+<h3>LOGIC EXPRESSIONS</h3>
+
+<pre><code>exps can linked with logic expression and '(', ')' 
+-not
+-and
+-or
+'(', ')' should be used after Escape character \. exp '\(' and '\(' 
+</code></pre>
+
+<h3>ACTIONS</h3>
+
+<pre><code>-exec [argv] \;
+  if it is true, excute the cmd. 
+-ok [argv] \;
+  if it is true, excute the cmd.(ask first) 
+-print
+  if it is true, printf it
+-print0
+  if it is true, printf it without '\n'
+</code></pre>
+
+<h3>EXPRESSIONS</h3>
+
+<pre><code>-name
+  True if the last component of the pathname being examined matches pattern.
+  Special shell pattern matching characters (``['', ``]'', ``*'', and ``?'')
+  may be used as part of pattern.  These characters may be matched 
+  explicitly by escaping them with a backslash (``\'').
+-iname
+  Like -name, but the match is case insensitive
+-user [username | user_id]
+  True if the file belongs to the user
+-group [groupname | group_id]
+  True if the file belongs to the group
+-perm [perm(exp 777)]
+  True if the file match such perm
+-regex [reg]
+  True if the filename match the regex expression
+-amin [n]
+  True if the file is accessed in n minutes 
+-atime [n]
+  True if the file is accessed in n days 
+-anewer [file2]
+  True if the file is accessed later than file2
+-cmin [n]
+  True if the file is changed in n minutes 
+-ctime [n]
+  True if the file is changed in n days 
+-cnewer [file2]
+  True if the file is changed later than file2
+-mmin [n]
+  True if the file is modified in n minutes 
+-mtime [n]
+  True if the file is modified in n days 
+-mnewer [file2]
+  True if the file is modified later than file2
+-type [b|c|d|f|l|p]
+  b       block special
+  c       character special
+  d       directory
+  f       regular file
+  l       symbolic link
+  p       FIFO
+  s       socket
+-size
+  True if the file's size, rounded up, in 512-byte blocks is n. 
+  If n is followed by a c, then the primary is true if the file's 
+  size is n bytes (characters).  Similarly if n is followed by a 
+  scale indicator then the file's size is compared to n scaled as:
+
+    k       kilobytes (1024 bytes)
+    M       megabytes (1024 kilobytes)
+    G       gigabytes (1024 megabytes)
+    T       terabytes (1024 gigabytes)
+    P       petabytes (1024 terabytes)
+</code></pre>
+
+<h2>DESIGN</h2>
+
+<h3>SOURCE FILES</h3>
+
+<pre><code>the src folder includes:
+  Makefile    the makefile of the tool
+  env.h       | global include, define, and struct
+
+  parser.h    | the parser of expressions from the bash.
+  parser.c    | it will translate the exp to postfix expression
+
+  filter.h    | build the filter tree and  
+  filter.c    | inplement all the filters
+
+  tinyfind.c  | the main file of tool and it use api to 
+              | traverse a file hierarchy   
+</code></pre>
+
+<h3>FILTER DESIGN</h3>
+
+<pre><code>a. Filter Tree And Filter
+   Filter tree is a binary tree with node has a two pointer, passed and failed.
+   If the filter fails, it will exicute the filter that failed pointer pointed.
+   Filter contains a pointer to a filter_cmd.
+     filter_cmd  | a function pointer which contains the test function to test   
+                 | whether a file can meets a expression
+   Filter contains a FilterType.
+     FilterType  | it is a enum and cantains the type information of a filter
+   Filter contains a void pointer, info.
+     info        | it contains some necessary information of a specific filter
+   each filter should implement at least two function:
+     init_xxx    | to init the a filter
+     xxx_filter  | it is filter_cmd, the test function.
+
+b. Build the Filter Tree
+   There are three functions to build the tree
+     filter_and  | connect to filter tree with and operation
+     filter_or   | connect to filter tree with or operation
+     filter_not  | wrap a filter in a not filter adapter
+   There are a stack to compute logic operations.
+
+c. RELEASE the Filter Tree
+   There is a list to track all the filters.
+   if a filter should release the information in filter, it should be add to
+   the _free_filter fuction. 
+</code></pre>
+
+<h2>FLEXIBLE</h2>
+
+<h3>ADD A EXPRESSION</h3>
+
+<pre><code>a. add the name of the  expression to FilterType in 'filter.h' and ALL_EXP
+   in 'parser.c'
+b. impelment function init_xxx and xxx_filter in 'filter.c'
+c. register the filter to the init_filter_tree function in 'filter.c' 
+that's all
+</code></pre>
+
+<h3>ADD A ACTION</h3>
+
+<pre><code>a. add the name of the action to ALL_OPTIONS in 'parser.c'
+b. add flags in options
+c. add some code of the action in set_post_exp in 'parser.c'
+d. add the operation in function check in 'tinyfind.c'
+that's all
+</code></pre>
+
+<h3>ADD A OPTION</h3>
+
+<pre><code>a. add the name of the option to ALL_OPTIONS in 'parser.c'
+b. add flags in options
+c. add some code of the option  in set_post_exp in 'parser.c'
+d. add the operation in function find in 'tinyfind.c'
+that's all
+</code></pre>
+
+<h2>COMPARISON</h2>
+
+<pre><code>It can have a tree of test functions 'predicate tree'
+It uses 'fts' api to traverse a file hierarchy
+pred.c    | it contains all the test functions
+tree.c    | to connect all the test functions into a tree
+
+In my version of 'find', filter tree plays a similar role as tree 
+and filter plays a similar role as predicate.
+
+The offical 'find' also has a parser to parse the bash parameters, but it is
+more powerful.
+</code></pre>
+      </section>
+
+      <footer>
+        <span class="ribbon-outer">
+          <span class="ribbon-inner">
+            <p>this project by <a href="https://github.com/sheimi">sheimi</a> can be found on <a href="https://github.com/sheimi/tiny-find">GitHub</a></p>
+          </span>
+          <span class="left-tail"></span>
+          <span class="right-tail"></span>
+        </span>
+        <p>Generated with <a href="http://pages.github.com">GitHub Pages</a> using Merlot</p>
+        <span class="octocat"></span>
+      </footer>
+
+    </div>
+
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-35791128-2");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+  </body>
+</html>
